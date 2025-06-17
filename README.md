@@ -21,7 +21,7 @@ Projeto desenvolvido no âmbito do **Grupo de Estudos do I2A2 - Institut d'Intel
 
 ### 🧩 Agente 1 - Ingestão e Armazenamento
 
-1. **Upload de Arquivos CSV** (Compactados ou não)
+1. **Upload de Arquivos CSV** (Compactados)
 2. **Descompactação e Classificação** dos arquivos em "Cabeçalho" e "Itens"
 3. **Parse e Inserção** dos dados em duas tabelas do PostgreSQL:
 
@@ -131,11 +131,3 @@ Usuário → Chatbot (React) → API (Express) → Webhook (n8n)
 4. Suba o backend Express (`server.js`) com roteamento para o webhook
 5. Inicie a aplicação React com Vite (`npm run dev`)
 6. Realize chamadas ao Chatbot ou à API via Postman
-
----
-
-## 🧠 Considerações Finais
-
-* A solução evita uso direto de vetorização, focando em bases estruturadas
-* É adaptável para novos domínios apenas com alteração dos metadados
-* Democratiza a análise de dados usando IA com interface simples
