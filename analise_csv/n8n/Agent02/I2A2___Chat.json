@@ -1,0 +1,318 @@
+{
+  "name": "I2A2 - Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return {\n    \"query\": $input.first().json.output.replace(\"sql\", \"\").replaceAll(\"\\n\", \" \").replaceAll(\"```\",\"\")\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        0
+      ],
+      "id": "296bfe03-a5cf-4272-9739-48efa9fdbbfb",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1060,
+        240
+      ],
+      "id": "dd369a93-0004-4ee7-9c6a-4218352669a5",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "m5wGQYvw8yT30NmE",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.content }}",
+        "options": {
+          "systemMessage": "=Você é um assistente SQL especialista em PostgreSQL.\n\nCom base nos metadados a seguir, gere consultas SQL completas, claras e eficientes. Sempre use aspas duplas para nomes de colunas e tabelas. Evite *SELECT * *. Traga nomes explícitos de colunas e use aliases legíveis, quando necessário. \n\n### Estrutura da Tabela: nfs_cabecalho - Representa as notas fiscais (Cabeçalho)\n- chave_acesso: VARCHAR(44) — chave primária da nota fiscal - Chave de Acesso de uma nota fiscal \n- modelo: TEXT - Modelo utilizado para a nota fiscal (Ex: 5 - NF-E EMITIDA EM SUBSTITUIÇÃO AO MODELO 1 OU 1A)\n- serie: TEXT - Série da nota fiscal\n- numero: TEXT - Número da Nota Fiscal \n- natureza_operacao: TEXT - Natureza da Operação\n- data_emissao: TIMESTAMP - Data de Emissão\n- evento_mais_recente: TEXT - Evento mais recente da nota fiscal\n- data_hora_evento_mais_recente: TIMESTAMP - Data / Hora do evento mais recente data nota fiscal\n- cpf_cnpj_emitente: VARCHAR(14) - CPF / CNPJ do emitente\n- razao_social_emitente: TEXT - Razão Social do emitente\n- inscricao_estadual_emitente: TEXT - Inscrição Estadual do emitente\n- uf_emitente: CHAR(2) - UF do emitente\n- municipio_emitente: TEXT - Município do emitente\n- cnpj_destinatario: VARCHAR(14) - CNPJ do destinatário\n- nome_destinatario: TEXT - Nome do destinatário\n- uf_destinatario: CHAR(2) - UF do destinatário\n- indicador_ie_destinatario: TEXT - Indicador de Inscrição estadual do destinatário\n- destino_operacao: TEXT - Destino da operação\n- consumidor_final: TEXT - Indicador de Consumidor Final\n- presenca_comprador: TEXT - Indica o tipo de presenção do comprador no ato da compra\n- valor_nota_fiscal: NUMERIC(15,2) - Indica o valor total da Nota Fiscal\n\n### Estrutura da Tabela: nfs_itens - Representa as notas fiscais (Itens)\n- chave_acesso: VARCHAR(44) — chave estrangeira para NFs_Cabecalho - Chave de Acesso de uma nota fiscal\n- modelo: TEXT - Modelo utilizado para a nota fiscal (Ex: 5 - NF-E EMITIDA EM SUBSTITUIÇÃO AO MODELO 1 OU 1A)\n- serie: TEXT - Série da nota fiscal\n- numero: TEXT - Número da Nota Fiscal\n- natureza_operacao: TEXT - Natureza da Operação\n- data_emissao: TIMESTAMP - Data de Emissão\n- cpf_cnpj_emitente: VARCHAR(14) - CPF / CNPJ do emitente\n- razao_social_emitente: TEXT - Razão Social do emitente\n- inscricao_estadual_emitente: TEXT - Inscrição Estadual do emitente\n- uf_emitente: CHAR(2) - UF do emitente\n- municipio_emitente: TEXT - Município do emitente\n- cnpj_destinatario: VARCHAR(14) - CNPJ do destinatário\n- nome_destinatario: TEXT - Nome do destinatário\n- uf_destinatario: CHAR(2) - UF do destinatário\n- indicador_ie_destinatario: TEXT - Indicador de Inscrição estadual do destinatário\n- destino_operacao: TEXT - Destino da operação\n- consumidor_final: TEXT - Indicador de Consumidor Final\n- presenca_comprador: TEXT  - Indica o tipo de presenção do comprador no ato da compra\n- numero_produto: TEXT - Número do produto na nota fiscal\n- descricao_produto_servico: TEXT - Descrição do produto ou serviço\n- codigo_ncm_sh: TEXT - Código NCM do Produto\n- tipo_ncm_sh: TEXT - Tipo de NCM do Produto\n- cfop: TEXT - CFOP do Produto\n- quantidade: NUMERIC(10,2) - Quantidade comprada\n- unidade: TEXT - Unidade de Medida do Item\n- valor_unitario: NUMERIC(15,4) - Valor Unitário do Item\n- valor_total: NUMERIC(15,2) - Valor Total do Item\n\n### Instruções:\n- Sempre que possível, relacione as tabelas pela coluna `chave_acesso`.\n- Utilize filtros ou agregações se a pergunta sugerir.\n- Gere apenas o código SQL, sem explicações, não faça a inclusão de quebras de linhas ou qualquer notação, retorno somente a query, nunca retorne nenhuma outra informação\n- Caso a pergunta do usuário questione a informação já refornada anteriormente, retorne basicamente um código SQL para realizar novamente a consulta\n\n### Exemplo de perguntas que o usuário pode fazer:\n- Qual o total de notas emitidas no mês de janeiro?\n- Liste os 10 produtos mais vendidos por valor total.\n- Qual o valor total por UF do destinatário?\n- Quais notas foram emitidas para um determinado CNPJ?\n- Qual a média de valor unitário por produto?"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        220,
+        0
+      ],
+      "id": "3606facf-5732-495d-b644-3880a2b93ec4",
+      "name": "Query Generator - AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=Você é um assistente especialista em notas fiscais \n\nA partir de outro agente especialista foi gerada a  query SQL {{ $json.query }} para a seguinte pergunta feita pelo usuário \n{{ $('Webhook').item.json.body.content }}\n\n- Execute a ferramenta disponível, obtenha o resultado da operação e retorne a informação para o usuário solicitante\n- Não resuma dados obtidos da ferramenta, retorne todos os dados obtidos\n- Não faça nenhum tratamento sobre os dados obtidos pela ferramenta (Ex: Adição de espaços, retirada de caracteres, etc)\n- Realize o retorno para o usuário de forma amigável\n\nCaso haja alguma falha na execução da query retorne a mensagem: Não foi possível executar a solicitação feita, por favor tente mais tarde  "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        800,
+        0
+      ],
+      "id": "26d36fe7-0b98-46c6-8377-941edc3b7db8",
+      "name": "Fiscal AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        340,
+        220
+      ],
+      "id": "27410e2a-89e7-4784-b279-60e11832947f",
+      "name": "Query Generator - Menory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        900,
+        240
+      ],
+      "id": "3e99412e-e22b-4129-a69d-c0f4eb7789a7",
+      "name": "Fiscal AI Agent - Memory"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "i2a2-nf-data",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1a9addc6-76ed-45d2-96c6-e1cb0331931a",
+      "name": "Webhook",
+      "webhookId": "0351e14a-7952-4201-bcfe-55b9d67ba872",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "rhFXBL00ZfSOy5Fk",
+          "name": "I2A2 Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"content\": {{ $json.output.toJsonString() }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        1220,
+        0
+      ],
+      "id": "8ce83e82-4ebc-4cba-b42b-272cd99a24f6",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        220
+      ],
+      "id": "bede97ce-1e42-4325-ade7-c7ccaae2ae06",
+      "name": "OpenAI SQL Agent",
+      "credentials": {
+        "openAiApi": {
+          "id": "X5XL92EXTMSLZekp",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        240
+      ],
+      "id": "ad19d475-6fa8-483d-834d-311660ea52b2",
+      "name": "OpenAI Fiscal Agent",
+      "credentials": {
+        "openAiApi": {
+          "id": "X5XL92EXTMSLZekp",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Agente para: \n- Receber requisição HTTP \n- Geração de Instrução SQL\n- Código de Ajuste\n- Geração de resposta para o usuário",
+        "height": 140,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "6f9a2687-cab0-478f-ba45-b048b8943d05",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Fiscal AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "ai_tool": [
+        [
+          {
+            "node": "Fiscal AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Generator - AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Generator - Menory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Query Generator - AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fiscal AI Agent - Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Fiscal AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Generator - AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fiscal AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI SQL Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query Generator - AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Fiscal Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Fiscal AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "467edc87-8055-419f-b0c8-72aed8eb03f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "12f51739be6d1025dfef9e5f5a5021523172235191c2a6c23d05abf53583e77f"
+  },
+  "id": "g82tWJQ9keoSdbRm",
+  "tags": []
+}

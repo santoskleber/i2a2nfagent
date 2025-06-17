@@ -1,0 +1,877 @@
+{
+  "name": "I2A2 - PostgreSQL Loader",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d4a777a3-8bb9-451e-bf16-ada0149077e0",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ],
+      "id": "808573fd-cf28-4e15-ac47-300edb942e85",
+      "name": "Read Content",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "T50DOXvdl4HTpHch",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "19RIGzrkmRDdmnXgJz1tDWVXTEjku5tYg",
+            "mode": "list",
+            "cachedResultName": "I2A2",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/19RIGzrkmRDdmnXgJz1tDWVXTEjku5tYg"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "f778525e-d37b-462f-9e0f-e5e7b313d967",
+      "name": "Read NF Zip File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "T50DOXvdl4HTpHch",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "id": "fa32c688-7615-407a-9973-c16ee0c5a265",
+      "name": "Decompress ZIP File"
+    },
+    {
+      "parameters": {
+        "jsCode": "let results = [];\n\nfor (item of items) {\n    for (key of Object.keys(item.binary)) {\n        results.push({\n            json: {\n                fileName: item.binary[key].fileName\n            },\n            binary: {\n                data: item.binary[key],\n            }\n        });\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        0
+      ],
+      "id": "f50c4ef2-d474-4fad-a4f6-28fca9532ed7",
+      "name": "Spreadsheet to List"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        -100
+      ],
+      "id": "59473375-cca9-4379-b4e9-83f1b758c081",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.fileName }}",
+                    "rightValue": "NFs_Cabecalho.csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "d2337067-2439-4f1e-872c-d12fe0fdc45d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dfa0c136-92d3-4dfd-93f7-9dd709e5201b",
+                    "leftValue": "={{ $json.fileName }}",
+                    "rightValue": "NFs_Itens.csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "f60762ff-c0d5-42ef-9179-d84171f05394",
+      "name": "Eval File Name"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "nfs_cabecalho",
+          "mode": "list",
+          "cachedResultName": "nfs_cabecalho"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chave_acesso": "={{ $json['CHAVE DE ACESSO'] }}",
+            "modelo": "={{ $json.MODELO }}",
+            "serie": "={{ $json['SÉRIE'] }}",
+            "numero": "={{ $json['NÚMERO'] }}",
+            "natureza_operacao": "={{ $json['NATUREZA DA OPERAÇÃO'] }}",
+            "data_emissao": "={{ $json['DATA EMISSÃO'] }}",
+            "evento_mais_recente": "={{ $json['EVENTO MAIS RECENTE'] }}",
+            "data_hora_evento_mais_recente": "={{ $json['DATA/HORA EVENTO MAIS RECENTE'] }}",
+            "cpf_cnpj_emitente": "={{ $json['CPF/CNPJ Emitente'] }}",
+            "razao_social_emitente": "={{ $json['RAZÃO SOCIAL EMITENTE'] }}",
+            "inscricao_estadual_emitente": "={{ $json['INSCRIÇÃO ESTADUAL EMITENTE'] }}",
+            "uf_emitente": "={{ $json['UF EMITENTE'] }}",
+            "municipio_emitente": "={{ $json['MUNICÍPIO EMITENTE'] }}",
+            "cnpj_destinatario": "={{ $json['CNPJ DESTINATÁRIO'] }}",
+            "nome_destinatario": "={{ $json['NOME DESTINATÁRIO'] }}",
+            "uf_destinatario": "={{ $json['UF DESTINATÁRIO'] }}",
+            "indicador_ie_destinatario": "={{ $json['INDICADOR IE DESTINATÁRIO'] }}",
+            "destino_operacao": "={{ $json['DESTINO DA OPERAÇÃO'] }}",
+            "consumidor_final": "={{ $json['CONSUMIDOR FINAL'] }}",
+            "presenca_comprador": "={{ $json['PRESENÇA DO COMPRADOR'] }}",
+            "valor_nota_fiscal": "={{ $json['VALOR NOTA FISCAL'] }}"
+          },
+          "matchingColumns": [
+            "chave_acesso"
+          ],
+          "schema": [
+            {
+              "id": "chave_acesso",
+              "displayName": "chave_acesso",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "modelo",
+              "displayName": "modelo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "serie",
+              "displayName": "serie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "numero",
+              "displayName": "numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "natureza_operacao",
+              "displayName": "natureza_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "data_emissao",
+              "displayName": "data_emissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "evento_mais_recente",
+              "displayName": "evento_mais_recente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "data_hora_evento_mais_recente",
+              "displayName": "data_hora_evento_mais_recente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cpf_cnpj_emitente",
+              "displayName": "cpf_cnpj_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "razao_social_emitente",
+              "displayName": "razao_social_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "inscricao_estadual_emitente",
+              "displayName": "inscricao_estadual_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "uf_emitente",
+              "displayName": "uf_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "municipio_emitente",
+              "displayName": "municipio_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cnpj_destinatario",
+              "displayName": "cnpj_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "nome_destinatario",
+              "displayName": "nome_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "uf_destinatario",
+              "displayName": "uf_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "indicador_ie_destinatario",
+              "displayName": "indicador_ie_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "destino_operacao",
+              "displayName": "destino_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "consumidor_final",
+              "displayName": "consumidor_final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "presenca_comprador",
+              "displayName": "presenca_comprador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "valor_nota_fiscal",
+              "displayName": "valor_nota_fiscal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        -100
+      ],
+      "id": "eee6eb4d-90f4-4fd0-a401-e902f008aac1",
+      "name": "Postgres - Create or Update NF Header Data",
+      "credentials": {
+        "postgres": {
+          "id": "m5wGQYvw8yT30NmE",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        120
+      ],
+      "id": "7f585200-d03e-426c-b3b0-67cceae9419d",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "nfs_itens",
+          "mode": "list",
+          "cachedResultName": "nfs_itens"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chave_acesso": "={{ $json['CHAVE DE ACESSO'] }}",
+            "numero_produto": "={{ $json['NÚMERO PRODUTO'] }}",
+            "modelo": "={{ $json.MODELO }}",
+            "serie": "={{ $json['SÉRIE'] }}",
+            "numero": "={{ $json['NÚMERO'] }}",
+            "natureza_operacao": "={{ $json['NATUREZA DA OPERAÇÃO'] }}",
+            "data_emissao": "={{ $json['DATA EMISSÃO'] }}",
+            "cpf_cnpj_emitente": "={{ $json['CPF/CNPJ Emitente'] }}",
+            "razao_social_emitente": "={{ $json['RAZÃO SOCIAL EMITENTE'] }}",
+            "inscricao_estadual_emitente": "={{ $json['INSCRIÇÃO ESTADUAL EMITENTE'] }}",
+            "uf_emitente": "={{ $json['UF EMITENTE'] }}",
+            "municipio_emitente": "={{ $json['MUNICÍPIO EMITENTE'] }}",
+            "cnpj_destinatario": "={{ $json['CNPJ DESTINATÁRIO'] }}",
+            "nome_destinatario": "={{ $json['NOME DESTINATÁRIO'] }}",
+            "uf_destinatario": "={{ $json['UF DESTINATÁRIO'] }}",
+            "indicador_ie_destinatario": "={{ $json['INDICADOR IE DESTINATÁRIO'] }}",
+            "destino_operacao": "={{ $json['DESTINO DA OPERAÇÃO'] }}",
+            "consumidor_final": "={{ $json['CONSUMIDOR FINAL'] }}",
+            "presenca_comprador": "={{ $json['PRESENÇA DO COMPRADOR'] }}",
+            "descricao_produto_servico": "={{ $json['DESCRIÇÃO DO PRODUTO/SERVIÇO'] }}",
+            "codigo_ncm_sh": "={{ $json['CÓDIGO NCM/SH'] }}",
+            "tipo_ncm_sh": "={{ $json['NCM/SH (TIPO DE PRODUTO)'] }}",
+            "cfop": "={{ $json.CFOP }}",
+            "quantidade": "={{ $json.QUANTIDADE }}",
+            "unidade": "={{ $json.UNIDADE }}",
+            "valor_unitario": "={{ $json['VALOR UNITÁRIO'] }}",
+            "valor_total": "={{ $json['VALOR TOTAL'] }}"
+          },
+          "matchingColumns": [
+            "chave_acesso",
+            "numero_produto"
+          ],
+          "schema": [
+            {
+              "id": "chave_acesso",
+              "displayName": "chave_acesso",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "modelo",
+              "displayName": "modelo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "serie",
+              "displayName": "serie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "numero",
+              "displayName": "numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "natureza_operacao",
+              "displayName": "natureza_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "data_emissao",
+              "displayName": "data_emissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cpf_cnpj_emitente",
+              "displayName": "cpf_cnpj_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "razao_social_emitente",
+              "displayName": "razao_social_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "inscricao_estadual_emitente",
+              "displayName": "inscricao_estadual_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "uf_emitente",
+              "displayName": "uf_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "municipio_emitente",
+              "displayName": "municipio_emitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cnpj_destinatario",
+              "displayName": "cnpj_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "nome_destinatario",
+              "displayName": "nome_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "uf_destinatario",
+              "displayName": "uf_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "indicador_ie_destinatario",
+              "displayName": "indicador_ie_destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "destino_operacao",
+              "displayName": "destino_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "consumidor_final",
+              "displayName": "consumidor_final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "presenca_comprador",
+              "displayName": "presenca_comprador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "numero_produto",
+              "displayName": "numero_produto",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "descricao_produto_servico",
+              "displayName": "descricao_produto_servico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "codigo_ncm_sh",
+              "displayName": "codigo_ncm_sh",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "tipo_ncm_sh",
+              "displayName": "tipo_ncm_sh",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cfop",
+              "displayName": "cfop",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "unidade",
+              "displayName": "unidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "valor_unitario",
+              "displayName": "valor_unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        120
+      ],
+      "id": "38822ac1-4dcc-4571-9fba-89960179b878",
+      "name": "Postgres - Create or Update NF Item Data",
+      "credentials": {
+        "postgres": {
+          "id": "m5wGQYvw8yT30NmE",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Agente para: \n- Leitura de Arquivos (.zip)\n- Leitura dos dados\n- Extração das informações e gravação em respectiva tabela",
+        "height": 120,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "95e3084d-64f0-44eb-a774-54b2ac128f60",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read NF Zip File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Content": {
+      "main": [
+        [
+          {
+            "node": "Decompress ZIP File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read NF Zip File": {
+      "main": [
+        [
+          {
+            "node": "Read Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress ZIP File": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet to List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet to List": {
+      "main": [
+        [
+          {
+            "node": "Eval File Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eval File Name": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Create or Update NF Header Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Create or Update NF Item Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "62f3413c-a69a-458c-8d57-0a59c6f71ac1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "12f51739be6d1025dfef9e5f5a5021523172235191c2a6c23d05abf53583e77f"
+  },
+  "id": "9Hf9oDqCo3t88YsV",
+  "tags": []
+}
